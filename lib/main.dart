@@ -1,111 +1,137 @@
+import 'dart:io';
+import 'dart:isolate';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_midi/flutter_midi.dart';
+import 'package:speech_recognition/speech_recognition.dart';
+import 'package:button3d/button3d.dart';
+import 'package:shimmer/shimmer.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext cxt) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'talkPAD',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.teal,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: App(t: 'talkPAD'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class App extends StatefulWidget {
+  App({Key key, this.t}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  final String t;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _AppState createState() => _AppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _AppState extends State<App> {
+  List<List<int>> _keys = new List(16);
+  List<Isolate> _isols = new List(16);
+  SpeechRecognition _sp;
+  bool _rec = false;
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
+    FlutterMidi.playMidiNote(midi: 60);
+    print(_isols);
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+    });
+  }
+
+  static void _iCb(m) {
+    Mes iMes = m as Mes;
+    iMes.message.forEach((t) {
+      iMes.sender.send((t > 100) ? t~/10 : t);
+      sleep(Duration(milliseconds: (t > 100) ? 450 : 225));
+    });
+  }
+
+  void _spawnIsol(List<int> tune, int i) async {
+    ReceivePort rp = ReceivePort();
+    _isols[i] = await Isolate.spawn(_iCb, Mes<List<int>>(sender: rp.sendPort, message: tune));
+    rp.listen((t) => {
+      FlutterMidi.playMidiNote(midi: t)
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+  void initState() {
+    rootBundle.load("assets/b.sf2").then((sf2) {
+      FlutterMidi.prepare(sf2: sf2, name: "b.sf2");
+    });
+    _keys[0] = [60, 70, 80];
+    _keys[15] = [62, 62, 62, 670, 740, 72, 71, 69, 790, 740, 72, 71, 69, 790, 740, 72, 71, 72, 690];
+    _keys[1] = [60];
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext cxt) {
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(widget.t),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+      body: Container(
+        child: GridView.count(
+          crossAxisCount: 4,
+          crossAxisSpacing: 10.0,
+          mainAxisSpacing: 10.0,
+          padding: EdgeInsets.all(10.0),
+          children: _keys.asMap().entries.map((e) => GestureDetector(
+            child: Button3d(
+              style: Button3dStyle(
+                topColor: Colors.tealAccent,
+                backColor: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(20),
+                z: 20.0,
+                tappedZ: 8.0
+              ),
+              onPressed: () => _isols[e.key]?.kill(priority: Isolate.immediate),
+              child: LayoutBuilder(builder: (cx, ct) => (e.value != null)
+                ? Icon(Icons.music_note, size: ct.biggest.height / 1.7, color: Colors.blueAccent)
+                : _rec
+                  ? Shimmer.fromColors(
+                    baseColor: Colors.blueAccent,
+                    highlightColor: Colors.tealAccent,
+                    child: Icon(Icons.file_download, size: ct.biggest.height / 1.7),
+                  )
+                  : Text('')
+              )
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+            onTapDown: (t) => _spawnIsol(e.value, e.key),
+          )).toList(),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            tooltip: 'Increment',
+            child: Icon(Icons.add),
+          ),
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            tooltip: 'Increment',
+            child: Icon(Icons.mic),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class Mes<T> {
+  final SendPort sender;
+  final T message;
+  Mes({
+      this.sender,
+      this.message,
+  });
 }
