@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  vibrate: ^0.0.4
   flutter_midi: ^0.1.1+3
   speech_recognition: ^0.3.0
   button3d: ^0.1.0

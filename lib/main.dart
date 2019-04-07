@@ -6,6 +6,7 @@ import 'package:flutter_midi/flutter_midi.dart';
 import 'package:speech_recognition/speech_recognition.dart';
 import 'package:button3d/button3d.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:vibrate/vibrate.dart';
 
 void main() => runApp(MyApp());
 
@@ -50,8 +51,7 @@ class _AppState extends State<App> {
     _sr.activate();
   }
 
-  static void _isolCb(Mes m) {
-    Mes iMes = m;
+  static void _isolCb(Mes iMes) {
     iMes.m.forEach((t) {
       iMes.s.send((t > 34) ? t~/10 : t);
       sleep(Duration(milliseconds: (t > 100) ? 450 : 225));
@@ -61,9 +61,15 @@ class _AppState extends State<App> {
   void _playTune(List<int> tune, int i) async {
     ReceivePort rp = ReceivePort();
     _isols[i] = await Isolate.spawn(_isolCb, Mes<List<int>>(s: rp.sendPort, m: tune));
+    Vibrate.feedback(FeedbackType.medium);
     rp.listen((t) {
       FlutterMidi.playMidiNote(midi: t + 50);
     });
+  }
+
+  void _termTune(int i) {
+    _isols[i]?.kill(priority: Isolate.immediate);
+    _isols[i] = null;
   }
 
   void _saveTune(int k) {
@@ -72,7 +78,7 @@ class _AppState extends State<App> {
   }
 
   void clrSR() {
-    _isols[16]?.kill(priority: Isolate.immediate);
+    _termTune(16);
     setState(() {
       _doneRec = false;
       _trans = '';
@@ -121,7 +127,7 @@ class _AppState extends State<App> {
                       z: 20.0,
                       tappedZ: 8.0
                     ),
-                    onPressed: () => _isols[e.key]?.kill(priority: Isolate.immediate),
+                    onPressed: () {},
                     child: LayoutBuilder(builder: (cx, ct) => (e.value != null) ? Icon(
                       Icons.music_note,
                       size: ct.biggest.height / 1.7,
@@ -133,6 +139,7 @@ class _AppState extends State<App> {
                     ) : Text(''))
                   ),
                   onTapDown: (t) => _doneRec ? _saveTune(e.key) : _playTune(e.value, e.key),
+                  onTapCancel: () => _termTune(e.key),
                 )
               )).toList(),
             ),
@@ -164,10 +171,8 @@ class Mes<T> {
   });
 }
 
-List<int> s2t(String s) => s
-  .toLowerCase()
-  .replaceAll(new RegExp(r"'"), '')
-  .split(' ')
+List<int> s2t(String s) => s.toLowerCase()
+  .replaceAll(new RegExp(r"'"), '').split(' ')
   .map((w) => w.split('').fold(0, (t, s) => t + s.codeUnitAt(0) - 96))
   .map((n) => (n > 34) ? n % 34 * ((n ~/ 34) % 2 * 9 + 1) : n)
   .toList().cast<int>();
