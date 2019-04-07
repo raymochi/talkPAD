@@ -102,9 +102,7 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext cxt) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.t),
-      ),
+      appBar: AppBar(title: Text(widget.t)),
       body: Column(
         children: <Widget>[
           Expanded(
@@ -115,32 +113,12 @@ class _AppState extends State<App> {
               crossAxisSpacing: 10.0,
               mainAxisSpacing: 10.0,
               padding: EdgeInsets.all(10.0),
-              children: _keys.asMap().entries.map((e) => IgnorePointer(
-                ignoring: _isRec,
-                child: GestureDetector(
-                  excludeFromSemantics: true,
-                  child: Button3d(
-                    style: Button3dStyle(
-                      topColor: Colors.tealAccent,
-                      backColor: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(20),
-                      z: 20.0,
-                      tappedZ: 8.0
-                    ),
-                    onPressed: () {},
-                    child: LayoutBuilder(builder: (cx, ct) => (e.value != null) ? Icon(
-                      Icons.music_note,
-                      size: ct.biggest.height / 1.7,
-                      color: Colors.blueAccent
-                    ) : _doneRec ? Shimmer.fromColors(
-                      baseColor: Colors.blueAccent,
-                      highlightColor: Colors.tealAccent,
-                      child: Icon(Icons.file_download, size: ct.biggest.height / 1.7),
-                    ) : Text(''))
-                  ),
-                  onTapDown: (t) => _doneRec ? _saveTune(e.key) : _playTune(e.value, e.key),
-                  onTapCancel: () => _termTune(e.key),
-                )
+              children: _keys.asMap().entries.map((e) => _btn(
+                _isRec,
+                _doneRec,
+                e.value != null,
+                () => _doneRec ? _saveTune(e.key) : _playTune(e.value, e.key),
+                () => _termTune(e.key)
               )).toList(),
             ),
           ),
@@ -162,13 +140,40 @@ class _AppState extends State<App> {
   }
 }
 
+Widget _btn(bool isRec, bool doneRec, bool hasTune, VoidCallback onPress, VoidCallback onCancel) {
+  return IgnorePointer(
+    ignoring: isRec,
+    child: GestureDetector(
+      excludeFromSemantics: true,
+      child: Button3d(
+        style: Button3dStyle(
+          topColor: Colors.tealAccent,
+          backColor: Colors.blueAccent,
+          borderRadius: BorderRadius.circular(20),
+          z: 20.0,
+          tappedZ: 8.0
+        ),
+        onPressed: () {},
+        child: LayoutBuilder(builder: (cx, ct) => hasTune ? Icon(
+          Icons.music_note,
+          size: ct.biggest.height / 1.7,
+          color: Colors.blueAccent
+        ) : doneRec ? Shimmer.fromColors(
+          baseColor: Colors.blueAccent,
+          highlightColor: Colors.tealAccent,
+          child: Icon(Icons.file_download, size: ct.biggest.height / 1.7),
+        ) : Text(''))
+      ),
+      onTapDown: (_) => onPress(),
+      onTapCancel: onCancel,
+    )
+  );
+}
+
 class Mes<T> {
   final SendPort s;
   final T m;
-  Mes({
-      this.s,
-      this.m,
-  });
+  Mes({this.s, this.m});
 }
 
 List<int> s2t(String s) => s.toLowerCase()
