@@ -16,17 +16,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext cxt) {
     return MaterialApp(
       title: 'talkPAD',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: App(t: 'talkPAD'),
+      theme: ThemeData(primarySwatch: Colors.teal),
+      home: App(),
     );
   }
 }
 
 class App extends StatefulWidget {
-  App({Key key, this.t}) : super(key: key);
-  final String t;
+  App({Key key}) : super(key: key);
   @override
   _AppState createState() => _AppState();
 }
@@ -63,15 +60,10 @@ class _AppState extends State<App> {
     ReceivePort rp = ReceivePort();
     _isols[i] = await Isolate.spawn(_isolCb, Mes(s: rp.sendPort, m: tune));
     Vibrate.feedback(FeedbackType.medium);
-    rp.listen((t) {
-      FlutterMidi.playMidiNote(midi: t + 50);
-    });
+    rp.listen((t) => FlutterMidi.playMidiNote(midi: t + 50));
   }
 
-  void _termTune(int i) {
-    _isols[i]?.kill(priority: Isolate.immediate);
-    _isols[i] = null;
-  }
+  void _termTune(int i) => _isols[i]?.kill(priority: Isolate.immediate);
 
   void _saveTune(int k, BuildContext cxt) {
     _keys[k] = s2t(_trans);
@@ -96,18 +88,17 @@ class _AppState extends State<App> {
   void initState() {
     rootBundle.load("assets/b.sf2").then((sf2) => FlutterMidi.prepare(sf2: sf2, name: "b.sf2"));
     initSR();
-    _keys[0] = [0, 10, 20];
-    _keys[15] = [2, 2, 2, 70, 140, 12, 11, 9, 190, 140, 12, 11, 9, 190, 140, 12, 11, 12, 90];
-    _keys[1] = [10];
-    _keys[2] = [0];
-    _keys[3] = [34];
+    _keys[0] = [2, 2, 2, 70];
+    _keys[5] = [9, 190];
+    _keys[10] = [140, 12, 11];
+    _keys[15] = [12, 90];
     super.initState();
   }
 
   @override
   Widget build(BuildContext cxt) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.t)),
+      appBar: AppBar(title: Text('talkPAD')),
       body: Column(
         children: <Widget>[
           Expanded(
@@ -115,9 +106,9 @@ class _AppState extends State<App> {
             child: GridView.count(
               primary: false,
               crossAxisCount: 4,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-              padding: EdgeInsets.all(10.0),
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              padding: EdgeInsets.all(8.0),
               children: _keys.asMap().entries.map((e) => _btn(
                 _isRec,
                 _doneRec,
@@ -127,20 +118,12 @@ class _AppState extends State<App> {
               )).toList(),
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Text(_trans.split(' ').last)
-          )
+          Expanded(flex: 1, child: Text(_trans.split(' ').last)),
         ],
       ),
-      floatingActionButton: _doneRec ? FloatingActionButton(
-        onPressed: clrSR,
-        backgroundColor: Colors.red,
-        child: Icon(Icons.clear),
-      ) : FloatingActionButton(
-        onPressed: () => !_isRec ? _rec(cxt) : null,
-        child: Icon(Icons.mic),
-      ),
+      floatingActionButton: _doneRec ?
+        FloatingActionButton(onPressed: clrSR, backgroundColor: Colors.red, child: Icon(Icons.clear)) :
+        FloatingActionButton(onPressed: () => !_isRec ? _rec(cxt) : null, child: Icon(Icons.mic))
     );
   }
 }
