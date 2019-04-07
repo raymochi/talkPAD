@@ -15,6 +15,7 @@ dependencies:
   button3d: ^0.1.0
   shimmer: ^1.0.0
   cupertino_icons: ^0.1.2
+  edge_alert: ^0.0.1
 
 dev_dependencies:
   flutter_test:

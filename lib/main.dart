@@ -7,6 +7,7 @@ import 'package:speech_recognition/speech_recognition.dart';
 import 'package:button3d/button3d.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vibrate/vibrate.dart';
+import 'package:edge_alert/edge_alert.dart';
 
 void main() => runApp(MyApp());
 
@@ -60,7 +61,7 @@ class _AppState extends State<App> {
 
   void _playTune(List<int> tune, int i) async {
     ReceivePort rp = ReceivePort();
-    _isols[i] = await Isolate.spawn(_isolCb, Mes<List<int>>(s: rp.sendPort, m: tune));
+    _isols[i] = await Isolate.spawn(_isolCb, Mes(s: rp.sendPort, m: tune));
     Vibrate.feedback(FeedbackType.medium);
     rp.listen((t) {
       FlutterMidi.playMidiNote(midi: t + 50);
@@ -72,9 +73,15 @@ class _AppState extends State<App> {
     _isols[i] = null;
   }
 
-  void _saveTune(int k) {
+  void _saveTune(int k, BuildContext cxt) {
     _keys[k] = s2t(_trans);
     clrSR();
+    EdgeAlert.show(cxt, title: 'New talkTune!', description: 'Tune saved', icon: Icons.music_note, backgroundColor: Colors.blueAccent);
+  }
+
+  void _rec(BuildContext cxt) {
+    _sr.listen(locale: 'en_US');
+    EdgeAlert.show(cxt, title: 'Recording', description: 'Say something!', icon: Icons.record_voice_over, backgroundColor: Colors.red);
   }
 
   void clrSR() {
@@ -87,9 +94,7 @@ class _AppState extends State<App> {
 
   @override
   void initState() {
-    rootBundle.load("assets/b.sf2").then((sf2) {
-      FlutterMidi.prepare(sf2: sf2, name: "b.sf2");
-    });
+    rootBundle.load("assets/b.sf2").then((sf2) => FlutterMidi.prepare(sf2: sf2, name: "b.sf2"));
     initSR();
     _keys[0] = [0, 10, 20];
     _keys[15] = [2, 2, 2, 70, 140, 12, 11, 9, 190, 140, 12, 11, 9, 190, 140, 12, 11, 12, 90];
@@ -117,7 +122,7 @@ class _AppState extends State<App> {
                 _isRec,
                 _doneRec,
                 e.value != null,
-                () => _doneRec ? _saveTune(e.key) : _playTune(e.value, e.key),
+                () => _doneRec ? _saveTune(e.key, cxt) : _playTune(e.value, e.key),
                 () => _termTune(e.key)
               )).toList(),
             ),
@@ -133,7 +138,7 @@ class _AppState extends State<App> {
         backgroundColor: Colors.red,
         child: Icon(Icons.clear),
       ) : FloatingActionButton(
-        onPressed: () => !_isRec ? _sr.listen(locale: 'en_US') : null,
+        onPressed: () => !_isRec ? _rec(cxt) : null,
         child: Icon(Icons.mic),
       ),
     );
@@ -170,9 +175,9 @@ Widget _btn(bool isRec, bool doneRec, bool hasTune, VoidCallback onPress, VoidCa
   );
 }
 
-class Mes<T> {
+class Mes {
   final SendPort s;
-  final T m;
+  final List<int> m;
   Mes({this.s, this.m});
 }
 
