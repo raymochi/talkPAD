@@ -10,8 +10,13 @@ An experimental launchpad-like app built in Flutter that allows users to play mu
 Currently the application only runs on Android due to minor differences with ios and android in the packages used.
 
 To run on android, attach android device and run:
+
 `
   flutter run --release
+`
+
+`
+  Enable microphone access in the app permissions
 `
 
 Make sure packages are installed and microphone usage is enabled on device for speech recognition.
@@ -30,6 +35,7 @@ Example:
 
 ## TODO
 
+- Add Microphone permission check for Android
 - Add IOS support
 - Add functionality to go backwords from tune to words
 - Implement an alternative simpler solution to finding notes with words
