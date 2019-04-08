@@ -60,7 +60,7 @@ class _AppState extends State<App> {
     ReceivePort rp = ReceivePort();
     _isols[i] = await Isolate.spawn(_isolCb, Mes(s: rp.sendPort, m: tune));
     Vibrate.feedback(FeedbackType.medium);
-    rp.listen((t) => FlutterMidi.playMidiNote(midi: t + 50));
+    rp.listen((t) => FlutterMidi.playMidiNote(midi: t + 42));
   }
 
   void _termTune(int i) => _isols[i]?.kill(priority: Isolate.immediate);
@@ -86,7 +86,7 @@ class _AppState extends State<App> {
 
   @override
   void initState() {
-    rootBundle.load("assets/b.sf2").then((sf2) => FlutterMidi.prepare(sf2: sf2, name: "b.sf2"));
+    rootBundle.load("assets/guitar.sf2").then((sf2) => FlutterMidi.prepare(sf2: sf2, name: "b.sf2"));
     initSR();
     _keys[0] = [2, 2, 2, 70];
     _keys[5] = [9, 190];

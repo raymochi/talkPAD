@@ -1,5 +1,5 @@
 name: talk_pad
-description: A new Flutter project.
+description: An experimental Flutter project that converts speech to sound
 author: Raymond Chow <raymo.chow@gmail.com>
 
 version: 1.0.0+1
@@ -26,4 +26,4 @@ flutter:
   uses-material-design: true
 
   assets:
-   - assets/b.sf2
+   - assets/guitar.sf2
