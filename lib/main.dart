@@ -50,20 +50,26 @@ class _AppState extends State<App> {
   }
 
   static void _isolCb(Mes iMes) {
-    iMes.m.forEach((t) {
-      iMes.s.send((t > 34) ? t~/10 : t);
-      sleep(Duration(milliseconds: (t > 100) ? 450 : 225));
-    });
+    while (true) {
+      iMes.m.forEach((t) {
+        iMes.s.send((t > 34) ? t~/10 : t);
+        sleep(Duration(milliseconds: (t > 100) ? 450 : 225));
+      });
+    }
   }
 
   void _playTune(List<int> tune, int i) async {
     ReceivePort rp = ReceivePort();
+    if (_isols[i] != null) _termTune(i);
     _isols[i] = await Isolate.spawn(_isolCb, Mes(s: rp.sendPort, m: tune));
     Vibrate.feedback(FeedbackType.medium);
     rp.listen((t) => FlutterMidi.playMidiNote(midi: t + 42));
   }
 
-  void _termTune(int i) => _isols[i]?.kill(priority: Isolate.immediate);
+  void _termTune(int i) {
+    _isols[i]?.kill(priority: Isolate.immediate);
+    _isols[i] = null;
+  }
 
   void _saveTune(int k, BuildContext cxt) {
     _keys[k] = s2t(_trans);

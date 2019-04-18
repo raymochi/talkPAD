@@ -6,12 +6,15 @@ PODS:
     - Flutter
   - speech_recognition (0.0.1):
     - Flutter
+  - vibrate (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `.symlinks/flutter/ios`)
   - flutter_midi (from `.symlinks/plugins/flutter_midi/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - speech_recognition (from `.symlinks/plugins/speech_recognition/ios`)
+  - vibrate (from `.symlinks/plugins/vibrate/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -22,13 +25,16 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider/ios"
   speech_recognition:
     :path: ".symlinks/plugins/speech_recognition/ios"
+  vibrate:
+    :path: ".symlinks/plugins/vibrate/ios"
 
 SPEC CHECKSUMS:
   Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
   flutter_midi: f2346c9598a8330d6ce607ba63192f42e8d530ae
   path_provider: 09407919825bfe3c2deae39453b7a5b44f467873
   speech_recognition: 647da2fb33d7e6968bbdbd85240b5ee420d651f8
+  vibrate: 8d9cb77859e02b88730c44a9907f561ddca25ca1
 
-PODFILE CHECKSUM: 9f8e85b138657cc9f9913280437e4adadb9723e4
+PODFILE CHECKSUM: 2f253c56af71689385cf1912d5b62e0e49d75831
 
 COCOAPODS: 1.5.3
